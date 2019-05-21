@@ -24,7 +24,7 @@ class VGG(nn.Module):
         ])
         self.transf = transforms.RandomChoice([
             transforms.RandomRotation(10),
-            transforms.RandomSizedCrop()
+            # transforms.RandomSizedCrop()
             # transforms.RandomCrop(32, 4),
         ])
 
