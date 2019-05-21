@@ -60,7 +60,6 @@ class Solver(object):
         else:
             self.device = torch.device('cpu')
 
-        self.device = 'cpu'
 
         # self.model = LeNet().to(self.device)
         # self.model = AlexNet().to(self.device)
