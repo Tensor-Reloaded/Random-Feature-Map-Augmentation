@@ -17,9 +17,9 @@ CLASSES = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship'
 
 def main():
     parser = argparse.ArgumentParser(description="cifar-10 with PyTorch")
-    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+    parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
     parser.add_argument('--epoch', default=100, type=int, help='number of epochs tp train for')
-    parser.add_argument('--trainBatchSize', default=128, type=int, help='training batch size')
+    parser.add_argument('--trainBatchSize', default=64, type=int, help='training batch size')
     parser.add_argument('--testBatchSize', default=1000, type=int, help='testing batch size')
     parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help='whether cuda is in use')
     args = parser.parse_args()
@@ -49,9 +49,9 @@ class Solver(object):
         data_root = '../storage'
 
         train_set = torchvision.datasets.CIFAR10(root=data_root, train=True, download=True, transform=train_transform)
-        self.train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=self.train_batch_size, shuffle=True, num_workers=4)
+        self.train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=self.train_batch_size, shuffle=True, num_workers=1)
         test_set = torchvision.datasets.CIFAR10(root=data_root, train=False, download=True, transform=test_transform)
-        self.test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=self.test_batch_size, shuffle=False, num_workers=4)
+        self.test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=self.test_batch_size, shuffle=False)
 
     def load_model(self):
         if self.cuda:
@@ -60,9 +60,11 @@ class Solver(object):
         else:
             self.device = torch.device('cpu')
 
+        self.device = 'cpu'
+
         # self.model = LeNet().to(self.device)
-        self.model = AlexNet().to(self.device)
-        # self.model = VGG11().to(self.device)
+        # self.model = AlexNet().to(self.device)
+        self.model = VGG11().to(self.device)
         # self.model = VGG13().to(self.device)
         # self.model = VGG16().to(self.device)
         # self.model = VGG19().to(self.device)
@@ -78,8 +80,7 @@ class Solver(object):
         # self.model = DenseNet201().to(self.device)
         # self.model = WideResNet(depth=28, num_classes=10).to(self.device)
 
-        self.optimizer = optim.Adam(self.model.parameters() ,lr=self.lr)
-        # self.optimizer = optim.SGD(self.model.parameters(), momentum=0.1, lr=self.lr)
+        self.optimizer = optim.SGD(self.model.parameters(), momentum=0.5, lr=self.lr, nesterov=True)
         self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[75, 150], gamma=0.5)
         self.criterion = nn.CrossEntropyLoss().to(self.device)
 
@@ -93,7 +94,7 @@ class Solver(object):
         for batch_num, (data, target) in enumerate(self.train_loader):
             data, target = data.to(self.device), target.to(self.device)
             self.optimizer.zero_grad()
-            output = self.model(data)
+            output = self.model(data, True)
 
             loss = self.criterion(output, target)
             train_loss += loss.item()
@@ -105,8 +106,7 @@ class Solver(object):
 
             # train_correct incremented by one if predicted right
             train_correct += np.sum(prediction[1].cpu().numpy() == target.cpu().numpy())
-            # if batch_num % 10 == 0:
-            #     print(train_correct / total)
+
         print('Loss: %.4f | Acc: %.3f%% (%d/%d)'
                          % (train_loss / (len(self.train_loader) + 1), 100. * train_correct / total, train_correct, total))
 
