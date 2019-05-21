@@ -24,6 +24,7 @@ class VGG(nn.Module):
         ])
         self.transf = transforms.RandomChoice([
             transforms.RandomRotation(10),
+            transforms.RandomSizedCrop()
             # transforms.RandomCrop(32, 4),
         ])
 
@@ -38,7 +39,7 @@ class VGG(nn.Module):
                 num_fm = out.size(1)
 
                 fm_count = out.size(1) * out.size(0)
-                probs = torch.cuda.FloatTensor(fm_count).uniform_()
+                probs = torch.FloatTensor(fm_count).uniform_()
                 sel_idxs = (probs < self.transf_prob).nonzero()
                 out = out.view(out.size(0) * out.size(1), out.size(-2), out.size(-1))
                 for idx in sel_idxs:
